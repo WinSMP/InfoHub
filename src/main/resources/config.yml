@@ -1,0 +1,19 @@
+# InfoHub - Get information about the server
+
+# Discord server link
+discord-link: "https://discord.gg/yourserver"
+
+# List of server rules
+rules:
+  - "No griefing"
+  - "No cheating"
+  - "Respect other players"
+  - "No spamming chat"
+
+# Custom help message
+help-message: "Welcome to the server! Use /discord for the Discord link, /rules for the rules, and /help for this menu."
+
+# People who seem to have 0ms are usually lagging a lot, or they're locally connected to the server.
+# Ideally it means someone's lagging a lot, and the measurement changes after some seconds-ish.
+# You can choose to warn users about this or not if a player has 0ms.
+warn-user-ping: false

@@ -1,0 +1,17 @@
+name: InfoHub
+version: '0.1.0-SNAPSHOT'
+main: 'org.winlogon.InfoHub'
+api-version: 1.21
+description: 'Get information about the server and players'
+folia-supported: true
+commands:
+  discord:
+    description: "Get back the link to the Discord server"
+  rules:
+    aliases: rulebook
+    description: "View the rules"
+  ping:
+    description: "Get the ping of a player"
+    usage: "Usage: /<command> [player]"
+  help:
+    description: "Deny the teleport request"
