@@ -12,6 +12,5 @@ commands:
     description: "View the rules"
   ping:
     description: "Get the ping of a player"
-    usage: "Usage: /<command> [player]"
   help:
     description: "Deny the teleport request"
