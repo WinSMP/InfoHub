@@ -3,7 +3,7 @@ package org.winlogon
 import org.bukkit.plugin.java.JavaPlugin
 
 class InfoHub extends JavaPlugin {
-  private val commands = List("discord", "rules", "rulebook", "ping", "help")
+  private val commands = List("discord", "dc", "whatisthediscord", "rules", "rulebook", "ping", "help")
   private var discordLink: String = "https://discord.gg/yourserver"
   private var rules: List[String] = List.empty
   private var helpMessage: String = "Use /discord, /rules, or /help for more information!"
@@ -16,11 +16,6 @@ class InfoHub extends JavaPlugin {
     val infoHubExecutor = new InfoHubCommand(config)
 
     // Register commands
-    // getCommand("discord").setExecutor(infoHubExecutor)
-    // getCommand("rules").setExecutor(infoHubExecutor)
-    // getCommand("rulebook").setExecutor(infoHubExecutor)
-    // getCommand("ping").setExecutor(infoHubExecutor)
-    // getCommand("help").setExecutor(infoHubExecutor)
     for (command <- commands) {
       getCommand(command).setExecutor(infoHubExecutor)
     }

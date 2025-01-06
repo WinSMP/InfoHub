@@ -6,9 +6,10 @@ description: 'Get information about the server and players'
 folia-supported: true
 commands:
   discord:
+    aliases: ['dc', 'whatisthediscord']
     description: "Get back the link to the Discord server"
   rules:
-    aliases: rulebook
+    aliases: ['rulebook']
     description: "View the rules"
   ping:
     description: "Get the ping of a player"
