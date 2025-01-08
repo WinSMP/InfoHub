@@ -22,12 +22,21 @@ class InfoHubCommand(config: Config) extends CommandExecutor {
       case "discord" =>
         sender.sendMessage(s"§7Join our Discord: §3${config.discordLink}")
         true
+      case "specs" | "whatdoesthisserveruse" =>
+        val specs = getSystemSpecs()
+        sender.sendMessage(s"§3Server §2Specs")
+        sender.sendMessage(s"§7- Processor: §3${specs.processor}")
+        sender.sendMessage(s"§7- Physical Cores: §3${specs.physicalCores}")
+        sender.sendMessage(s"§7- Logical Cores: §3${specs.logicalCores}")
+        sender.sendMessage(s"§7- Total Memory: §3${specs.totalMemory} GB")
+        sender.sendMessage(s"§7- Available Memory: §3${specs.availableMemory} GB")
+        true
       case "rules" | "rulebook" =>
         if (config.rules.isEmpty) {
           sender.sendMessage(s"§cError§7: Rules are not configured!")
           return false
         }
-        sender.sendMessage(s"§3Server §2Rules:")
+        sender.sendMessage(s"§3Server §2Rules")
         config.rules.foreach(rule => sender.sendMessage(s"§7- $rule"))
         true
       case "ping" =>

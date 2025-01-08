@@ -29,6 +29,7 @@ assembly / mainClass := Some("org.winlogon.InfoHub")
 
 libraryDependencies ++= Seq(
   "io.papermc.paper" % "paper-api" % "1.21.4-R0.1-SNAPSHOT" % Provided,
+  "com.github.oshi" % "oshi-core" % "6.6.5",
 )
 
 resolvers += "papermc-repo" at "https://repo.papermc.io/repository/maven-public/"

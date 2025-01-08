@@ -3,12 +3,17 @@ package org.winlogon
 import org.bukkit.plugin.java.JavaPlugin
 
 class InfoHub extends JavaPlugin {
-  private val commands = List("discord", "dc", "whatisthediscord", "rules", "rulebook", "ping", "help")
+  private val commands = List(
+    "discord", "dc", "whatisthediscord", "rules", "rulebook",
+    "ping", "help", "specs", "whatdoesthisserveruse",
+  )
   private var discordLink: String = "https://discord.gg/yourserver"
   private var rules: List[String] = List.empty
   private var helpMessage: String = "Use /discord, /rules, or /help for more information!"
   private var warnUserAboutPing: Boolean = false
   private var config: Config = Config(discordLink, rules, helpMessage, warnUserAboutPing)
+
+  val logger = this.getLogger
 
   override def onEnable(): Unit = {
     saveDefaultConfig()
@@ -20,14 +25,15 @@ class InfoHub extends JavaPlugin {
       getCommand(command).setExecutor(infoHubExecutor)
     }
 
-    getLogger.info("InfoHub has been enabled!")
+    logger.info("InfoHub has been enabled!")
   }
 
   override def onDisable(): Unit = {
-    getLogger.info("InfoHub has been disabled!")
+    logger.info("InfoHub has been disabled!")
   }
 
   private def loadConfig(): Config = {
+    logger.info("Loading configuration...")
     Config(
       discordLink = getConfig.getString("discord-link"),
       rules = getConfig.getStringList("rules").toArray.map(_.toString).toList,

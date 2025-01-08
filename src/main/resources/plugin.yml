@@ -13,5 +13,8 @@ commands:
     description: "View the rules"
   ping:
     description: "Get the ping of a player"
+  specs:
+    description: "Get the specs of the server"
+    aliases: ['whatdoesthisserveruse']
   help:
     description: "Deny the teleport request"
