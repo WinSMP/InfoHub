@@ -3,6 +3,9 @@ package org.winlogon
 import org.bukkit.command.{Command, CommandSender, CommandExecutor}
 import org.bukkit.{Bukkit, ChatColor}
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
+
+import org.winlogon.utils.ServerStats
 
 case class Config(
   discordLink: String,
@@ -11,7 +14,7 @@ case class Config(
   warnUserAboutPing: Boolean
 )
 
-class InfoHubCommand(config: Config) extends CommandExecutor {
+class InfoHubCommand(private val mainClass: InfoHub, config: Config) extends CommandExecutor {
   override def onCommand(
       sender: CommandSender,
       command: Command,
@@ -23,8 +26,9 @@ class InfoHubCommand(config: Config) extends CommandExecutor {
         sender.sendMessage(s"§7Join our Discord: §3${config.discordLink}")
         true
       case "specs" | "whatdoesthisserveruse" =>
-        val specs = getSystemSpecs()
+        val specs = ServerStats.getSystemSpecs()
         sender.sendMessage(s"§3Server §2Specs")
+        sender.sendMessage(s"§7- OS: §3${specs.operatingSystem}")
         sender.sendMessage(s"§7- Processor: §3${specs.processor}")
         sender.sendMessage(s"§7- Physical Cores: §3${specs.physicalCores}")
         sender.sendMessage(s"§7- Logical Cores: §3${specs.logicalCores}")
@@ -41,6 +45,10 @@ class InfoHubCommand(config: Config) extends CommandExecutor {
         true
       case "ping" =>
         handlePingCommand(sender, args, config)
+        true
+      case "uptime" =>
+        ServerStats.getUptime(mainClass.startTime, System.nanoTime, sender)
+        true
       case "help" =>
         sender.sendMessage(s"§7${showColors(config.helpMessage)}")
         true

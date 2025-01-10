@@ -18,3 +18,5 @@ commands:
     aliases: ['whatdoesthisserveruse']
   help:
     description: "Deny the teleport request"
+  uptime:
+    description: "Get the uptime of the server"
