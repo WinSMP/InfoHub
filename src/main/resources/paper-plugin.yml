@@ -1,0 +1,6 @@
+name: "${NAME}"
+version: "${VERSION}"
+main: "${PACKAGE}.InfoHubPlugin"
+api-version: "1.21"
+description: "Get information about the server and players"
+folia-supported: true
