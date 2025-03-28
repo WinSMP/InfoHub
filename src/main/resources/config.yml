@@ -10,7 +10,7 @@ rules:
   - "Respect other players"
   - "No spamming chat"
 
-# Custom help message
+# Custom help message. Use MiniMessage (https://docs.advntr.dev/minimessage/format.html#standard-tags) for text formatting.
 help-message: "Welcome to the server! Use /discord for the Discord link, /rules for the rules, and /help for this menu."
 
 # People who seem to have 0ms are usually lagging a lot, or they're locally connected to the server.
