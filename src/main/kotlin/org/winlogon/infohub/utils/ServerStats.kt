@@ -42,7 +42,7 @@ object ServerStats {
         val os: OperatingSystem = systemInfo.operatingSystem
         val osName = os.family
         val version = os.versionInfo.version
-        return "§3$osName§7 version §2$version§7"
+        return "<dark_aqua>$osName<gray> version <dark_aqua>$version<gray>"
     }
 
     /**
@@ -50,17 +50,14 @@ object ServerStats {
      *
      * @param start The start time of the server, from when this plugin is enabled
      * @param end The moment the command is run
-     * @param sender The sender of the command
      */
-    fun getUptime(start: Long, end: Long, sender: CommandSender): String {
+    fun getUptime(start: Long, end: Long): String {
         val nanos = end - start
         val days = TimeUnit.NANOSECONDS.toDays(nanos)
         val hours = TimeUnit.NANOSECONDS.toHours(nanos) % 24
         val minutes = TimeUnit.NANOSECONDS.toMinutes(nanos) % 60
         val seconds = TimeUnit.NANOSECONDS.toSeconds(nanos) % 60
 
-        val result = "§7Server has been up for: §3${days}d ${hours}h ${minutes}m ${seconds}s"
-        sender.sendMessage(result)
-        return result
+        return "Server has been up for: <dark_aqua>${days}d ${hours}h ${minutes}m ${seconds}s"
     }
 }
