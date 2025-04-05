@@ -17,11 +17,12 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.winlogon.infohub.utils.ServerStats
 
 class InfoHubPlugin : JavaPlugin() {
-    private var discordLink: String = "https://discord.gg/yourserver"
     private lateinit var rules: List<String>
+    private lateinit var config: Config
+
+    private var discordLink: String = "https://discord.gg/yourserver"
     private var helpMessage: String = "Use /discord, /rules, or /help for more information!"
     private var warnUserAboutPing: Boolean = false
-    private lateinit var config: Config
     private var startTime: Long = 0
     private val miniMessage = MiniMessage.miniMessage()
     private val playerLogger = PlayerLogger()
@@ -35,14 +36,12 @@ class InfoHubPlugin : JavaPlugin() {
         reloadConfig()
         config = loadConfig()
         
-        // Register commands
         registerCommands()
         
         logger.info("InfoHub has been enabled!")
     }
 
     override fun onDisable() {
-        CommandAPI.onDisable()
         logger.info("InfoHub has been disabled!")
     }
 
