@@ -115,6 +115,10 @@ class HintHandler(
     }
 
     fun sendRandomHint(allPlayers: List<Player>, ignoredPlayers: List<Player>) {
+        if (allPlayers.isEmpty()) {
+            return
+        }
+
         val audience = allPlayers.filter { it.isOnline && it !in ignoredPlayers }
         val hint = getRandomHintWithColor()
         val formattedMsg = miniMessage.deserialize(hint)

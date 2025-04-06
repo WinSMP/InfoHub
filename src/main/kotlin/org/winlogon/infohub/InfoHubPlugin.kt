@@ -62,6 +62,8 @@ class InfoHubPlugin : JavaPlugin() {
         hintHandler = HintHandler(miniMessage, hintConfig, random)
         
         registerCommands()
+
+        logger.info("Starting background hint sender")
         startSendingHints()
         
         logger.info("InfoHub has been enabled!")
@@ -72,20 +74,25 @@ class InfoHubPlugin : JavaPlugin() {
     }
 
     private fun startSendingHints() {
-        val task = Runnable {
-            hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
-        }
+        val baseDur = (60 * 1000)
+        // From 5 to 20 minutes as Minecraft ticks
+        val randDur = random.nextInt(5 * baseDur, 20 * baseDur) / 50
+        val randomTime = randDur.toLong()
 
-        // time in milliseconds -> 5-20 minutes
-        val randomTime = random.nextInt(5 * (60 * 1000), 20 * (60 * 1000)).toLong()
+        val task = Runnable {
+            // Run the hint task again after running it
+            hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
+            startSendingHints()
+        }
 
         if (isFolia) {
             val scheduler = Bukkit.getServer().getGlobalRegionScheduler()
-            scheduler.runAtFixedRate(this, Consumer { _ ->
+            // Needed because the task is repeated
+            scheduler.runDelayed(this, Consumer { _ ->
                 task.run()
-            }, randomTime, randomTime)
+            }, randomTime)
         } else {
-            Bukkit.getScheduler().runTaskTimerAsynchronously(this, task, randomTime, randomTime)
+            Bukkit.getScheduler().runTaskLaterAsynchronously(this, task, randomTime)
         }
     }
 
@@ -174,18 +181,23 @@ class InfoHubPlugin : JavaPlugin() {
             .withSubcommands(
                 CommandAPICommand("disable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
+                        if (!ignoredPlayers.contains(sender)) {
+                            playerLogger.normal(sender, "Hints are already <dark_aqua>disabled<gray> for you.")
+                            return@PlayerCommandExecutor
+                        }
+
                         ignoredPlayers.remove(sender)
                         playerLogger.normal(sender, "Got it! Hints are now <dark_aqua>disabled<gray> for you.")
                     }),
                 CommandAPICommand("enable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
+                        if (ignoredPlayers.contains(sender)) {
+                            playerLogger.normal(sender, "Hints are already <dark_aqua>enabled<gray> for you.")
+                            return@PlayerCommandExecutor
+                        }
+
                         ignoredPlayers.add(sender)
                         playerLogger.normal(sender, "Okay, hints are <dark_aqua>enabled<gray> now.")
-                    }),
-                CommandAPICommand("send")
-                    .executesPlayer(PlayerCommandExecutor { sender, _ ->
-                        sender.sendMessage("message sent")
-                        hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
                     }),
             )
             .register()
