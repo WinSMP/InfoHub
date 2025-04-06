@@ -7,24 +7,38 @@ import dev.jorel.commandapi.arguments.ArgumentSuggestions
 import dev.jorel.commandapi.arguments.PlayerArgument
 import dev.jorel.commandapi.executors.CommandExecutor
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
+
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import org.winlogon.infohub.utils.HintHandler
 import org.winlogon.infohub.utils.ServerStats
+import java.util.function.Consumer
 
 class InfoHubPlugin : JavaPlugin() {
-    private var discordLink: String = "https://discord.gg/yourserver"
     private lateinit var rules: List<String>
+    private lateinit var config: Config
+    private lateinit var hintHandler: HintHandler
+
+    private var discordLink: String = "https://discord.gg/yourserver"
     private var helpMessage: String = "Use /discord, /rules, or /help for more information!"
     private var warnUserAboutPing: Boolean = false
-    private lateinit var config: Config
+
+    private val hintList: MutableList<String> = mutableListOf()
+    private val ignoredPlayers: MutableList<Player> = mutableListOf()
+
     private var startTime: Long = 0
+    private var isFolia: Boolean = false
+
     private val miniMessage = MiniMessage.miniMessage()
     private val playerLogger = PlayerLogger()
+    private val emojiList: List<String> = listOf("💡", "📝", "🔍", "📌", "💬", "📖", "🧠", "🎯")
+    private val random = java.security.SecureRandom()
 
     override fun onLoad() {
         startTime = System.nanoTime()
@@ -34,16 +48,52 @@ class InfoHubPlugin : JavaPlugin() {
         saveDefaultConfig()
         reloadConfig()
         config = loadConfig()
+        isFolia = try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer")
+            true
+        } catch(e: ClassNotFoundException) {
+            false
+        }
+
+        val hintConfig = HintConfig(
+            hintList = config.hintList,
+            iconEmojis = emojiList,
+        )
+        hintHandler = HintHandler(miniMessage, hintConfig, random)
         
-        // Register commands
         registerCommands()
+
+        logger.info("Starting background hint sender")
+        startSendingHints()
         
         logger.info("InfoHub has been enabled!")
     }
 
     override fun onDisable() {
-        CommandAPI.onDisable()
         logger.info("InfoHub has been disabled!")
+    }
+
+    private fun startSendingHints() {
+        val baseDur = (60 * 1000)
+        // From 5 to 20 minutes as Minecraft ticks
+        val randDur = random.nextInt(5 * baseDur, 20 * baseDur) / 50
+        val randomTime = randDur.toLong()
+
+        val task = Runnable {
+            // Run the hint task again after running it
+            hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
+            startSendingHints()
+        }
+
+        if (isFolia) {
+            val scheduler = Bukkit.getServer().getGlobalRegionScheduler()
+            // Needed because the task is repeated
+            scheduler.runDelayed(this, Consumer { _ ->
+                task.run()
+            }, randomTime)
+        } else {
+            Bukkit.getScheduler().runTaskLaterAsynchronously(this, task, randomTime)
+        }
     }
 
     private fun loadConfig(): Config {
@@ -53,7 +103,8 @@ class InfoHubPlugin : JavaPlugin() {
             discordLink = bukkitConfig.getString("discord-link") ?: discordLink,
             rules = bukkitConfig.getStringList("rules").takeIf { it.isNotEmpty() } ?: emptyList(),
             helpMessage = bukkitConfig.getString("help-message") ?: helpMessage,
-            warnUserAboutPing = bukkitConfig.getBoolean("warn-user-ping", warnUserAboutPing)
+            warnUserAboutPing = bukkitConfig.getBoolean("warn-user-ping", warnUserAboutPing),
+            hintList = bukkitConfig.getStringList("hint-list").takeIf { it.isNotEmpty() } ?: emptyList()
         )
     }
 
@@ -125,8 +176,32 @@ class InfoHubPlugin : JavaPlugin() {
                 playerLogger.normal(sender, "${config.helpMessage}")
             })
             .register()
-    }
 
+        CommandAPICommand("hint")
+            .withSubcommands(
+                CommandAPICommand("disable")
+                    .executesPlayer(PlayerCommandExecutor { sender, _ ->
+                        if (!ignoredPlayers.contains(sender)) {
+                            playerLogger.normal(sender, "Hints are already <dark_aqua>disabled<gray> for you.")
+                            return@PlayerCommandExecutor
+                        }
+
+                        ignoredPlayers.remove(sender)
+                        playerLogger.normal(sender, "Got it! Hints are now <dark_aqua>disabled<gray> for you.")
+                    }),
+                CommandAPICommand("enable")
+                    .executesPlayer(PlayerCommandExecutor { sender, _ ->
+                        if (ignoredPlayers.contains(sender)) {
+                            playerLogger.normal(sender, "Hints are already <dark_aqua>enabled<gray> for you.")
+                            return@PlayerCommandExecutor
+                        }
+
+                        ignoredPlayers.add(sender)
+                        playerLogger.normal(sender, "Okay, hints are <dark_aqua>enabled<gray> now.")
+                    }),
+            )
+            .register()
+    }
 }
 
 class PlayerLogger {
@@ -171,5 +246,11 @@ data class Config(
     val discordLink: String,
     val rules: List<String>,
     val helpMessage: String,
-    val warnUserAboutPing: Boolean
+    val warnUserAboutPing: Boolean,
+    val hintList: List<String>,
+)
+
+data class HintConfig(
+    val hintList: List<String>,
+    val iconEmojis: List<String>,
 )
