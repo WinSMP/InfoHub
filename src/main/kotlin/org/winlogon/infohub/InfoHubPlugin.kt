@@ -37,7 +37,7 @@ class InfoHubPlugin : JavaPlugin() {
 
     private val miniMessage = MiniMessage.miniMessage()
     private val playerLogger = PlayerLogger()
-    private val emojiList: List<String> = listOf("💡", "📝", "🔍", "📌", "💬", "📖", "🧠", "🎯")
+    private val emojiList: List<String> = listOf("💡", "📝", "🔍", "📌", "💬", "📖", "🎯")
     private val random = java.security.SecureRandom()
 
     override fun onLoad() {
