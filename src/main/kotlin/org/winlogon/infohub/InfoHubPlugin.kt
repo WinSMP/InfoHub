@@ -181,24 +181,22 @@ class InfoHubPlugin : JavaPlugin() {
             .withSubcommands(
                 CommandAPICommand("disable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
-                        if (!ignoredPlayers.contains(sender)) {
+                        if (ignoredPlayers.contains(sender)) {
                             playerLogger.normal(sender, "Hints are already <dark_aqua>disabled<gray> for you.")
                             return@PlayerCommandExecutor
                         }
-
-                        ignoredPlayers.remove(sender)
+                        ignoredPlayers.add(sender)
                         playerLogger.normal(sender, "Got it! Hints are now <dark_aqua>disabled<gray> for you.")
                     }),
                 CommandAPICommand("enable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
-                        if (ignoredPlayers.contains(sender)) {
+                        if (!ignoredPlayers.contains(sender)) {
                             playerLogger.normal(sender, "Hints are already <dark_aqua>enabled<gray> for you.")
                             return@PlayerCommandExecutor
                         }
-
-                        ignoredPlayers.add(sender)
+                        ignoredPlayers.remove(sender)
                         playerLogger.normal(sender, "Okay, hints are <dark_aqua>enabled<gray> now.")
-                    }),
+                    })
             )
             .register()
     }
