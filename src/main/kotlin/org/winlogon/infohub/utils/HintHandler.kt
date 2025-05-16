@@ -1,4 +1,4 @@
-package org.winlogon.infohub.utils;
+package org.winlogon.infohub.utils
 
 import org.bukkit.entity.Player
 import org.winlogon.infohub.HintConfig
@@ -42,7 +42,7 @@ class Color(val r: Int, val g: Int, val b: Int, private val random: SecureRandom
         fun getRandom(maxHue: Int?, minBrightness: Int, maxBrightness: Int, random: SecureRandom): Color {
             val inputHue = maxHue ?: 360
             val hue = random.nextInt(inputHue + 1)
-            val saturation = random.nextInt(60, 101)
+            val saturation = random.nextInt(60, 90 + 1)
             val lightness = random.nextInt(maxBrightness - minBrightness + 1) + minBrightness
 
             return hslToRgb(hue, saturation, lightness, random)
@@ -87,7 +87,7 @@ class HintHandler(
         val brighterColor = Color.getRandom(null, minBrightness, maxBrightness, random)
         val (hue, _, _) = brighterColor.toHSL()
 
-        val hueVariation = random.nextInt(-15, 16)
+        val hueVariation = random.nextInt(-8, 8 + 1)
         val newHue = (hue + hueVariation + 360) % 360
 
         val darkerMin = (minBrightness - 15).coerceAtLeast(0)
@@ -108,10 +108,10 @@ class HintHandler(
     }
 
     private fun getRandomHintWithColor(): String {
-        val color = getRandomColor()
+        val (start, end) = getRandomColor()
         val hint = getRandomHint()
         val icon = getRandomHintEmoji()
-        return "<${color.first}>[$icon]</${color.first}> <gradient:${color.first}:${color.second}>$hint</gradient>"
+        return "<$start>[$icon]</$start> <gradient:$start:$end>$hint</gradient>"
     }
 
     fun sendRandomHint(allPlayers: List<Player>, ignoredPlayers: List<Player>) {

@@ -62,7 +62,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("dev.jorel:commandapi-bukkit-core:9.7.0")
-    implementation("com.github.oshi:oshi-core-java11:6.8.0")
+    compileOnly("com.github.oshi:oshi-core-java11:6.8.0")
     
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
     testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
