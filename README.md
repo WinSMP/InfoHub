@@ -46,7 +46,7 @@ hint-list:
 ### Notes
 
 - The plugin auto-detects Folia and uses its scheduler if available.
-- Hints are sent randomly every 5–20 minutes.
+- Hints are sent randomly every 5-20 minutes.
 - No database required. All state is in memory.
 
 ## For Developers
