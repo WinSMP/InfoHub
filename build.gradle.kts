@@ -42,7 +42,6 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
         content {
             includeModule("io.papermc.paper", "paper-api")
-            // includeModule("io.papermc", "paperlib")
             includeModule("net.md-5", "bungeecord-chat")
         }
     }
@@ -60,8 +59,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-    compileOnly("dev.jorel:commandapi-bukkit-core:9.7.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnly("dev.jorel:commandapi-bukkit-core:10.0.1")
     compileOnly("com.github.oshi:oshi-core-java11:6.8.0")
     
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")

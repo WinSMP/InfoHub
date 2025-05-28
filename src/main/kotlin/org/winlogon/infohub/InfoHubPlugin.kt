@@ -75,19 +75,19 @@ class InfoHubPlugin : JavaPlugin() {
 
     private fun startSendingHints() {
         val baseDur = (60 * 1000)
-        // From 5 to 20 minutes as Minecraft ticks
+        // from 5 to 20 minutes as Minecraft ticks
         val randDur = random.nextInt(5 * baseDur, 20 * baseDur) / 50
         val randomTime = randDur.toLong()
 
         val task = Runnable {
-            // Run the hint task again after running it
+            // run the hint task again after running it
             hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
             startSendingHints()
         }
 
         if (isFolia) {
             val scheduler = Bukkit.getServer().getGlobalRegionScheduler()
-            // Needed because the task is repeated
+            // needed because the task is repeated
             scheduler.runDelayed(this, Consumer { _ ->
                 task.run()
             }, randomTime)
