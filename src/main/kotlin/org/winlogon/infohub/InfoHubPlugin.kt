@@ -65,12 +65,9 @@ class InfoHubPlugin : JavaPlugin() {
 
         logger.info("Starting background hint sender")
         startSendingHints()
-        
-        logger.info("InfoHub has been enabled!")
     }
 
     override fun onDisable() {
-        logger.info("InfoHub has been disabled!")
     }
 
     private fun startSendingHints() {

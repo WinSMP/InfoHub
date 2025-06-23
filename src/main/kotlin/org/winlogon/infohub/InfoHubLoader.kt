@@ -8,26 +8,37 @@ import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.graph.Dependency
 import org.eclipse.aether.repository.RemoteRepository
 
-class ScalaPluginLoader : PluginLoader {
+class InfoHubLoader : PluginLoader {
     override fun classloader(classpathBuilder: PluginClasspathBuilder) {
         val resolver = MavenLibraryResolver()
 
-        resolver.addRepository(
-            RemoteRepository.Builder(
-                "central", 
-                "default", 
-                "https://repo.maven.apache.org/maven2/"
-            ).build()
+        val repositories = mapOf(
+            "central" to "https://repo.maven.apache.org/maven2/"
         )
 
-        resolver.addDependency(
-            Dependency(
-                DefaultArtifact("com.github.oshi:oshi-core-java11:6.8.0"),
-                null
-            )
+        val dependencies = mapOf(
+            "com.github.oshi:oshi-core-java11" to "6.8.0"
         )
+
+        repositories.forEach { (name, url) -> 
+            resolver.addRepository(
+                RemoteRepository.Builder(
+                    name, 
+                    "default", 
+                    url
+                ).build()
+            )
+        }
+
+        dependencies.forEach { (package, version) -> 
+            resolver.addDependency(
+                Dependency(
+                    DefaultArtifact("$package:$version"),
+                    null
+                )
+            )
+        }
 
         classpathBuilder.addLibrary(resolver)
     }
 }
-
