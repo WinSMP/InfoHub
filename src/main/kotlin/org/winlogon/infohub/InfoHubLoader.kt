@@ -13,11 +13,16 @@ class InfoHubLoader : PluginLoader {
         val resolver = MavenLibraryResolver()
 
         val repositories = mapOf(
-            "central" to "https://repo.maven.apache.org/maven2/"
+            "central" to MavenLibraryResolver.MAVEN_CENTRAL_DEFAULT_MIRROR,
+            "winlogon-libs" to "https://maven.winlogon.org/releases/",
         )
 
         val dependencies = mapOf(
-            "com.github.oshi:oshi-core-java11" to "6.8.0"
+            "com.github.oshi:oshi-core-java11" to "6.8.0",
+            "com.zaxxer:HikariCP" to "6.3.0",
+            "org.postgresql:postgresql" to "42.7.7",
+            "com.mysql:mysql-connector-j" to "9.3.0",
+            "org.winlogon:asynccraftr" to "0.1.0",
         )
 
         repositories.forEach { (name, url) -> 
@@ -30,10 +35,10 @@ class InfoHubLoader : PluginLoader {
             )
         }
 
-        dependencies.forEach { (package, version) -> 
+        dependencies.forEach { (dependencyPackage, version) -> 
             resolver.addDependency(
                 Dependency(
-                    DefaultArtifact("$package:$version"),
+                    DefaultArtifact("$dependencyPackage:$version"),
                     null
                 )
             )

@@ -48,7 +48,7 @@ object ServerStats {
     }
 
     /**
-     * Get the uptime of the server based on the time that passed from onEnable
+     * Get the uptime of the server based on the time that passed from onLoad
      *
      * @param start The start time of the server, from when this plugin is enabled
      * @param end The moment the command is run

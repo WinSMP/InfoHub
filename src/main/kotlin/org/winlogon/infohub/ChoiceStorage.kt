@@ -1,36 +1,42 @@
 package org.winlogon.infohub
 
 import net.kyori.adventure.util.TriState
-
 import java.nio.file.Path
 import java.util.UUID
+import java.time.Duration
 
 interface ChoiceStorage {
-    // TODO: use my own Result library to check for specific errors?
-    fun init()
-    // TODO: should this return a nullable error enum?
-    fun checkConfig(): Boolean
+    fun init() {}
+    fun isConfigOkay(): Boolean = true
     fun getChoice(playerUuid: UUID): TriState
-    // TODO: should this return an error?
     fun setChoice(playerUuid: UUID, choice: Boolean)
 }
 
 sealed class DataSource {
-    data class Database(val config: DbConfig) : DataSource()
-    data class SQLite(val path: Path) : DataSource()
-    data class Local(val path: Path) : DataSource()
+    data class Database(
+        val config: DatabaseMetadata,
+        val backupInterval: Duration? = null
+    ) : DataSource()
+    
+    data class World(val pdcConfig: PdcConfig) : DataSource()
 }
 
-/** Non-embedded RDBMS configuration */
-data class DbConfig(
-    // Should handle the URL type accordingly
+data class DatabaseMetadata(
     val type: DatabaseType,
+    val host: String,
+    val port: Int,
+    val database: String,
     val username: String,
     val password: String,
-    val maxConnections: Int
+    val table: String = "infohub_choices"
+)
+
+data class PdcConfig(
+    val backupInterval: Duration?,
+    val usesDatabase: Boolean
 )
 
 enum class DatabaseType {
     POSTGRESQL,
-    MYSQL,
+    MYSQL
 }
