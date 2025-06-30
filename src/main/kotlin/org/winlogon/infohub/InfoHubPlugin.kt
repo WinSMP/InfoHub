@@ -76,7 +76,7 @@ class InfoHubPlugin : JavaPlugin() {
     }
 
     private fun createPdcStorage(): ChoiceStorage {
-        return PdcChoiceStorage(this)
+        return PdcChoiceStorage(this, config.storageConfig.redisUri)
     }
 
     private fun createDatabaseStorage(dbConfig: DatabaseMetadata?): ChoiceStorage {
@@ -85,7 +85,7 @@ class InfoHubPlugin : JavaPlugin() {
     }
 
     private fun createCombinedStorage(storageConfig: StorageConfig): ChoiceStorage {
-        val pdcStorage = PdcChoiceStorage(this)
+        val pdcStorage = PdcChoiceStorage(this, config.storageConfig.redisUri)
         val dbStorage = createDatabaseStorage(storageConfig.databaseConfig)
         return CombinedChoiceStorage(pdcStorage, dbStorage)
     }
@@ -148,7 +148,8 @@ class InfoHubPlugin : JavaPlugin() {
                     // get table name, and if it doesn't look correct, default to infohub_choices
                     table = dbSection.getString("table")?.takeIf { it.matches(tableRegex) } ?: "infohub_choices"
                 )
-            }
+            },
+            redisUri = storageSection?.getString("redis-uri") ?: "redis://localhost:6379"
         )
 
         return Config(
@@ -316,7 +317,8 @@ data class HintConfig(
 data class StorageConfig(
     val mode: String, // "pdc", "database", or "both"
     val databaseConfig: DatabaseMetadata? = null,
-    val backupInterval: Duration? = null
+    val backupInterval: Duration? = null,
+    val redisUri: String
 )
 
 class ChoiceManager(

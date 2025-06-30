@@ -26,9 +26,9 @@ storage:
   mode: "both"
   backupInterval: 5m
   database:
-    type: "MYSQL"
+    type: "POSTGRESQL"
     host: "localhost"
-    port: 3306
+    port: 5432
     database: "minecraft"
     username: "root"
     password: "password"

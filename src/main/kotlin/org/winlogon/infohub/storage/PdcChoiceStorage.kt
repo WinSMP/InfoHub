@@ -10,28 +10,58 @@ import org.winlogon.infohub.ChoiceStorage
 import org.winlogon.infohub.InfoHubPlugin
 
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
-class PdcChoiceStorage(private val plugin: InfoHubPlugin) : ChoiceStorage {
+class PlayerInformationCache {
+    private val playerCache = ConcurrentHashMap<UUID, OfflinePlayer>()
+
+    fun put(uuid: UUID, player: OfflinePlayer) {
+        playerCache.put(uuid, player)
+    }
+
+    fun get(uuid: UUID): OfflinePlayer? {
+        return playerCache[uuid]
+    }
+
+    fun evict(uuid: UUID) {
+        playerCache.remove(uuid)
+    }
+}
+
+class PdcChoiceStorage(
+    private val plugin: InfoHubPlugin,
+    redisUri: String
+) : ChoiceStorage {
     private val key = NamespacedKey(plugin, "${plugin.name.lowercase()}-hint-enabled")
     private val logger = plugin.logger
+    private val redisManager = RedisManager(redisUri)
+    private val cache = RedisPlayerCache(redisManager.conn.sync())
 
     override fun getChoice(playerUuid: UUID): TriState {
-        val player = Bukkit.getOfflinePlayer(playerUuid)
+        // get the name from cache
+        val name = cache.get(playerUuid)
+
+        // get the player from server cache (the player must have joined at this point) - see setChoice
+        val player = if (name != null) Bukkit.getOfflinePlayerIfCached(name)!!
+        else Bukkit.getOfflinePlayer(playerUuid)
+
+        cache.put(playerUuid, player.uniqueId.toString())
+
         val container = player.persistentDataContainer
-        
-        return if (container.has(key, PersistentDataType.BOOLEAN)) {
-            val value = container.get(key, PersistentDataType.BOOLEAN) ?: return TriState.NOT_SET
-            TriState.byBoolean(value)
-        } else {
-            TriState.NOT_SET
-        }
+        return if (container.has(key, PersistentDataType.BOOLEAN)) { 
+            // get whether the player has the hint enabled
+            container.get(key, PersistentDataType.BOOLEAN)
+            ?.let { TriState.byBoolean(it) } ?: TriState.NOT_SET
+        } else TriState.NOT_SET
     }
 
     override fun setChoice(playerUuid: UUID, choice: Boolean) {
-        val player = Bukkit.getPlayer(playerUuid) ?: run {
-            logger.warning("Failed to set PDC choice for offline player $playerUuid")
-            return
+        Bukkit.getPlayer(playerUuid)?.let { player ->
+            player.persistentDataContainer.set(key, PersistentDataType.BOOLEAN, choice)
+            cache.put(playerUuid, player.uniqueId.toString())
+        } ?: run {
+            logger.warning("Failed to set choice for offline $playerUuid")
         }
-        player.persistentDataContainer.set(key, PersistentDataType.BOOLEAN, choice)
     }
 }
+

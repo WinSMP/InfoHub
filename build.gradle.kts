@@ -72,6 +72,7 @@ dependencies {
     compileOnly("com.zaxxer:HikariCP:6.3.0")
     compileOnly("org.postgresql:postgresql:42.7.7")
     compileOnly("com.mysql:mysql-connector-j:9.3.0")
+    compileOnly("io.lettuce:lettuce-core:6.7.1.RELEASE")
 
     compileOnly("org.winlogon:asynccraftr:0.1.0")
     
