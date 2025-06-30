@@ -11,14 +11,25 @@ import dev.jorel.commandapi.executors.PlayerCommandExecutor
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import net.kyori.adventure.util.TriState
 
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import org.winlogon.asynccraftr.AsyncCraftr
 import org.winlogon.infohub.utils.HintHandler
 import org.winlogon.infohub.utils.ServerStats
+
+import org.winlogon.infohub.storage.CombinedChoiceStorage
+import org.winlogon.infohub.storage.DatabaseChoiceStorage
+import org.winlogon.infohub.storage.PdcChoiceStorage
+
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 import java.util.function.Consumer
+import kotlin.text.uppercase
 
 class InfoHubPlugin : JavaPlugin() {
     private lateinit var rules: List<String>
@@ -30,30 +41,59 @@ class InfoHubPlugin : JavaPlugin() {
     private var warnUserAboutPing: Boolean = false
 
     private val hintList: MutableList<String> = mutableListOf()
-    private val ignoredPlayers: MutableList<Player> = mutableListOf()
+    private lateinit var choiceManager: ChoiceManager
+    private val ignoredPlayers: MutableSet<UUID> = mutableSetOf()
 
     private var startTime: Long = 0
-    private var isFolia: Boolean = false
+    public val isFolia: Boolean = try {
+        Class.forName("io.papermc.paper.threadedregions.RegionizedServer")
+        true
+    } catch(e: ClassNotFoundException) {
+        false
+    }
 
     private val miniMessage = MiniMessage.miniMessage()
     private val playerLogger = PlayerLogger()
     private val emojiList: List<String> = listOf("💡", "📝", "🔍", "📌", "💬", "📖", "🎯")
     private val random = java.security.SecureRandom()
+    private val tableRegex = Regex("[a-zA-Z0-9_]+")
 
     override fun onLoad() {
         startTime = System.nanoTime()
+    }
+
+    private fun setupChoiceStorage() {
+        val storageConfig = config.storageConfig
+        val storage: ChoiceStorage = when (storageConfig.mode) {
+            "pdc" -> createPdcStorage()
+            "database" -> createDatabaseStorage(storageConfig.databaseConfig)
+            "both" -> createCombinedStorage(storageConfig)
+            else -> throw IllegalArgumentException("Invalid storage mode: ${storageConfig.mode}")
+        }
+        
+        choiceManager = ChoiceManager(storage, this, storageConfig.backupInterval)
+        choiceManager.start()
+    }
+
+    private fun createPdcStorage(): ChoiceStorage {
+        return PdcChoiceStorage(this, config.storageConfig.redisUri)
+    }
+
+    private fun createDatabaseStorage(dbConfig: DatabaseMetadata?): ChoiceStorage {
+        requireNotNull(dbConfig) { "Database configuration is required for database storage mode" }
+        return DatabaseChoiceStorage(dbConfig).apply { init() }
+    }
+
+    private fun createCombinedStorage(storageConfig: StorageConfig): ChoiceStorage {
+        val pdcStorage = PdcChoiceStorage(this, config.storageConfig.redisUri)
+        val dbStorage = createDatabaseStorage(storageConfig.databaseConfig)
+        return CombinedChoiceStorage(pdcStorage, dbStorage)
     }
 
     override fun onEnable() {
         saveDefaultConfig()
         reloadConfig()
         config = loadConfig()
-        isFolia = try {
-            Class.forName("io.papermc.paper.threadedregions.RegionizedServer")
-            true
-        } catch(e: ClassNotFoundException) {
-            false
-        }
 
         val hintConfig = HintConfig(
             hintList = config.hintList,
@@ -64,47 +104,61 @@ class InfoHubPlugin : JavaPlugin() {
         registerCommands()
 
         logger.info("Starting background hint sender")
+
+        setupChoiceStorage()
         startSendingHints()
-        
-        logger.info("InfoHub has been enabled!")
     }
 
     override fun onDisable() {
-        logger.info("InfoHub has been disabled!")
     }
 
     private fun startSendingHints() {
-        val baseDur = (60 * 1000)
-        // from 5 to 20 minutes as Minecraft ticks
-        val randDur = random.nextInt(5 * baseDur, 20 * baseDur) / 50
-        val randomTime = randDur.toLong()
+        val minutes = random.nextInt(5, 20)
+        val delay = Duration.ofMinutes(minutes.toLong())
 
-        val task = Runnable {
-            // run the hint task again after running it
-            hintHandler.sendRandomHint(Bukkit.getOnlinePlayers().toList(), ignoredPlayers)
+        AsyncCraftr.runAsyncTaskLater(this, {
+            val allPlayers = Bukkit.getOnlinePlayers().toList()
+            val ignoredPlayersList = ignoredPlayers.mapNotNull { Bukkit.getPlayer(it) }
+            hintHandler.sendRandomHint(allPlayers, ignoredPlayersList)
             startSendingHints()
-        }
-
-        if (isFolia) {
-            val scheduler = Bukkit.getServer().getGlobalRegionScheduler()
-            // needed because the task is repeated
-            scheduler.runDelayed(this, Consumer { _ ->
-                task.run()
-            }, randomTime)
-        } else {
-            Bukkit.getScheduler().runTaskLaterAsynchronously(this, task, randomTime)
-        }
+        }, delay)
     }
 
     private fun loadConfig(): Config {
         logger.info("Loading configuration...")
         val bukkitConfig = getConfig()
+        
+        // get configuration storage: and deeper from config.yml
+        val storageSection = bukkitConfig.getConfigurationSection("storage")
+
+        val storageConfig = StorageConfig(
+            mode = storageSection?.getString("mode") ?: "pdc",
+            backupInterval = storageSection?.getString("backupInterval")?.let {
+                Duration.parse("PT${it.uppercase()}") 
+            },
+            databaseConfig = storageSection?.getConfigurationSection("database")?.let { dbSection ->
+                val databaseType = dbSection.getString("type") ?: "MYSQL"
+                DatabaseMetadata(
+                    type = DatabaseType.valueOf(databaseType.uppercase()),
+                    host = dbSection.getString("host") ?: "localhost",
+                    port = dbSection.getInt("port", 3306),
+                    database = dbSection.getString("database") ?: "minecraft",
+                    username = dbSection.getString("username") ?: "root",
+                    password = dbSection.getString("password") ?: "",
+                    // get table name, and if it doesn't look correct, default to infohub_choices
+                    table = dbSection.getString("table")?.takeIf { it.matches(tableRegex) } ?: "infohub_choices"
+                )
+            },
+            redisUri = storageSection?.getString("redis-uri") ?: "redis://localhost:6379"
+        )
+
         return Config(
             discordLink = bukkitConfig.getString("discord-link") ?: discordLink,
             rules = bukkitConfig.getStringList("rules").takeIf { it.isNotEmpty() } ?: emptyList(),
             helpMessage = bukkitConfig.getString("help-message") ?: helpMessage,
             warnUserAboutPing = bukkitConfig.getBoolean("warn-user-ping", warnUserAboutPing),
-            hintList = bukkitConfig.getStringList("hint-list").takeIf { it.isNotEmpty() } ?: emptyList()
+            hintList = bukkitConfig.getStringList("hint-list").takeIf { it.isNotEmpty() } ?: emptyList(),
+            storageConfig = storageConfig
         )
     }
 
@@ -120,13 +174,18 @@ class InfoHubPlugin : JavaPlugin() {
         CommandAPICommand("specs")
             .executes(CommandExecutor { sender, _ ->
                 val specs = ServerStats.getSystemSpecs()
-                playerLogger.normal(sender, "<dark_aqua>Server Specs")
-                playerLogger.normal(sender, "- OS: <dark_aqua>${specs.operatingSystem}")
-                playerLogger.normal(sender, "- Processor: <dark_aqua>${specs.processor}")
-                playerLogger.normal(sender, "- Physical Cores: <dark_aqua>${specs.physicalCores}")
-                playerLogger.normal(sender, "- Logical Cores: <dark_aqua>${specs.logicalCores}")
-                playerLogger.normal(sender, "- Total Memory: <dark_aqua>${specs.totalMemory} GB")
-                playerLogger.normal(sender, "- Available Memory: <dark_aqua>${specs.availableMemory} GB")
+                playerLogger.normal(
+                    sender,
+                    arrayOf(
+                        "<dark_aqua>Server Specs",
+                        "- OS: <dark_aqua>${specs.operatingSystem}",
+                        "- Processor: <dark_aqua>${specs.processor}",
+                        "- Physical Cores: <dark_aqua>${specs.physicalCores}",
+                        "- Logical Cores: <dark_aqua>${specs.logicalCores}",
+                        "- Total Memory: <dark_aqua>${specs.totalMemory} GB",
+                        "- Available Memory: <dark_aqua>${specs.availableMemory} GB"
+                    )
+                )
             })
             .register()
 
@@ -177,24 +236,18 @@ class InfoHubPlugin : JavaPlugin() {
             })
             .register()
 
-        CommandAPICommand("hint")
+            CommandAPICommand("hint")
             .withSubcommands(
                 CommandAPICommand("disable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
-                        if (ignoredPlayers.contains(sender)) {
-                            playerLogger.normal(sender, "Hints are already <dark_aqua>disabled<gray> for you.")
-                            return@PlayerCommandExecutor
-                        }
-                        ignoredPlayers.add(sender)
+                        choiceManager.setChoice(sender.uniqueId, false)
+                        ignoredPlayers.add(sender.uniqueId)
                         playerLogger.normal(sender, "Got it! Hints are now <dark_aqua>disabled<gray> for you.")
                     }),
                 CommandAPICommand("enable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
-                        if (!ignoredPlayers.contains(sender)) {
-                            playerLogger.normal(sender, "Hints are already <dark_aqua>enabled<gray> for you.")
-                            return@PlayerCommandExecutor
-                        }
-                        ignoredPlayers.remove(sender)
+                        choiceManager.setChoice(sender.uniqueId, true)
+                        ignoredPlayers.remove(sender.uniqueId)
                         playerLogger.normal(sender, "Okay, hints are <dark_aqua>enabled<gray> now.")
                     })
             )
@@ -219,6 +272,11 @@ class PlayerLogger {
         player.sendMessage(formatMessage(prefix + message))
     }
 
+    public fun normal(player: CommandSender, messages: Array<String>) {
+        prefix = "<gray>"
+        messages.forEach { player.sendMessage(formatMessage(prefix + it)) }
+    }
+
     public fun debug(player: CommandSender, message: String) {
         prefix = "<dark_gray>[<#3590B2>DEBUG<dark_gray>]<gray> "
         player.sendMessage(formatMessage(prefix + message))
@@ -240,15 +298,52 @@ class PlayerLogger {
     }
 }
 
+
 data class Config(
     val discordLink: String,
     val rules: List<String>,
     val helpMessage: String,
     val warnUserAboutPing: Boolean,
     val hintList: List<String>,
+    val storageConfig: StorageConfig
 )
 
 data class HintConfig(
     val hintList: List<String>,
     val iconEmojis: List<String>,
 )
+
+
+data class StorageConfig(
+    val mode: String, // "pdc", "database", or "both"
+    val databaseConfig: DatabaseMetadata? = null,
+    val backupInterval: Duration? = null,
+    val redisUri: String
+)
+
+class ChoiceManager(
+    private val storage: ChoiceStorage,
+    private val plugin: InfoHubPlugin,
+    private val backupInterval: Duration?
+) {
+    private val taskId = -1
+
+    fun getChoice(playerUuid: UUID): TriState {
+        return storage.getChoice(playerUuid)
+    }
+
+    fun setChoice(playerUuid: UUID, choice: Boolean) {
+        storage.setChoice(playerUuid, choice)
+    }
+
+    fun start() {
+        if (backupInterval != null && storage is DatabaseChoiceStorage) {
+            AsyncCraftr.runAsyncTaskTimer(
+                plugin,
+                { storage.processQueue() },
+                backupInterval,
+                backupInterval
+            )
+        }
+    }
+}
