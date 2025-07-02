@@ -16,6 +16,8 @@ help-message: "Welcome to the server! Use /discord for the Discord link, /rules 
 hint-list:
   - "Use /discord for the Discord link"
   - "Do /specs for the server specs"
+  - "Check out /rules for server rules"
+  - "Use /uptime to see how long the server has been running"
 
 # People who seem to have 0ms are usually lagging a lot, or they're locally connected to the server.
 # Ideally it means someone's lagging a lot, and the measurement changes after some seconds-ish.
@@ -25,6 +27,7 @@ warn-user-ping: false
 storage:
   mode: "both"
   backupInterval: 5m
+  redis-uri: "redis://localhost:6379"
   database:
     type: "POSTGRESQL"
     host: "localhost"
