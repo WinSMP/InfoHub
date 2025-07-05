@@ -10,7 +10,10 @@ import dev.jorel.commandapi.executors.PlayerCommandExecutor
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.util.TriState
 
 import org.bukkit.Bukkit
@@ -166,7 +169,14 @@ class InfoHubPlugin : JavaPlugin() {
         // Discord command
         CommandAPICommand("discord")
             .executes(CommandExecutor { sender, _ ->
-                playerLogger.normal(sender, "Join our Discord: <dark_aqua>${config.discordLink}")
+                val clickableDiscordInvite = Component.text(config.discordLink)
+                    .color(NamedTextColor.DARK_AQUA)
+                    .clickEvent(ClickEvent.openUrl(config.discordLink))
+
+                sender.sendRichMessage(
+                    "<gray>Join our Discord: <discord-link>",
+                    Placeholder.component("discord-link", clickableDiscordInvite)
+                )
             })
             .register()
 
