@@ -87,7 +87,7 @@ class HintHandler(
         val brighterColor = Color.getRandom(null, minBrightness, maxBrightness, random)
         val (hue, _, _) = brighterColor.toHSL()
 
-        val hueVariation = random.nextInt(-8, 8 + 1)
+        val hueVariation = random.nextInt(-5, 5 + 1)
         val newHue = (hue + hueVariation + 360) % 360
 
         val darkerMin = (minBrightness - 15).coerceAtLeast(0)

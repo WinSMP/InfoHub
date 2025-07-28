@@ -116,7 +116,7 @@ class InfoHubPlugin : JavaPlugin() {
     }
 
     private fun startSendingHints() {
-        val minutes = random.nextInt(5, 20)
+        val minutes = random.nextInt(10, 25)
         val delay = Duration.ofMinutes(minutes.toLong())
 
         AsyncCraftr.runAsyncTaskLater(this, {
@@ -246,7 +246,7 @@ class InfoHubPlugin : JavaPlugin() {
             })
             .register()
 
-            CommandAPICommand("hint")
+        CommandAPICommand("hint")
             .withSubcommands(
                 CommandAPICommand("disable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
