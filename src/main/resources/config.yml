@@ -25,13 +25,14 @@ hint-list:
 warn-user-ping: false
 
 storage:
-  mode: "both"
-  backupInterval: 5m
-  redis-uri: "redis://localhost:6379"
+  backupInterval: 5m # Optional: Only for MySQL and PostgreSQL
+  redis:
+    enabled: false
+    uri: "redis://localhost:6379"
   database:
-    type: "POSTGRESQL"
+    type: "SQLITE" # SQLITE, MYSQL, or POSTGRESQL
     host: "localhost"
-    port: 5432
+    port: 3306
     database: "minecraft"
     username: "root"
     password: "password"
