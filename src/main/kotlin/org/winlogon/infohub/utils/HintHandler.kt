@@ -1,13 +1,13 @@
 package org.winlogon.infohub.utils
 
-import org.bukkit.entity.Player
-import org.winlogon.infohub.HintConfig
-
 import net.kyori.adventure.text.minimessage.MiniMessage
 
-import java.security.SecureRandom
+import org.bukkit.entity.Player
+import org.winlogon.infohub.config.HintConfig
 
-class Color(val r: Int, val g: Int, val b: Int, private val random: SecureRandom) {
+import kotlin.random.Random
+
+class Color(val r: Int, val g: Int, val b: Int, private val random: Random) {
     fun toHex(): String {
         return String.format("#%02x%02x%02x", r, g, b)
     }
@@ -39,7 +39,7 @@ class Color(val r: Int, val g: Int, val b: Int, private val random: SecureRandom
     }
 
     companion object {
-        fun getRandom(maxHue: Int?, minBrightness: Int, maxBrightness: Int, random: SecureRandom): Color {
+        fun getRandom(maxHue: Int?, minBrightness: Int, maxBrightness: Int, random: Random): Color {
             val inputHue = maxHue ?: 360
             val hue = random.nextInt(inputHue + 1)
             val saturation = random.nextInt(60, 90 + 1)
@@ -48,7 +48,7 @@ class Color(val r: Int, val g: Int, val b: Int, private val random: SecureRandom
             return hslToRgb(hue, saturation, lightness, random)
         }
 
-        private fun hslToRgb(h: Int, s: Int, l: Int, random: SecureRandom): Color {
+        private fun hslToRgb(h: Int, s: Int, l: Int, random: Random): Color {
             val sNorm = s / 100.0
             val lNorm = l / 100.0
 
@@ -77,7 +77,7 @@ class Color(val r: Int, val g: Int, val b: Int, private val random: SecureRandom
 class HintHandler(
     private val miniMessage: MiniMessage,
     private val hintConfig: HintConfig,
-	private val random: SecureRandom
+	private val random: Random
 ) {
 
     private fun getRandomColor(): Pair<String, String> {
@@ -99,12 +99,12 @@ class HintHandler(
 
     private fun getRandomHint(): String {
         val list = hintConfig.hintList
-        return list[random.nextInt(0, list.size)]
+        return list.random(random)
     }
 
     private fun getRandomHintEmoji(): String {
         val iconEmojis = hintConfig.iconEmojis
-        return iconEmojis[random.nextInt(0, iconEmojis.size)]
+        return iconEmojis.random(random)
     }
 
     private fun getRandomHintWithColor(): String {
