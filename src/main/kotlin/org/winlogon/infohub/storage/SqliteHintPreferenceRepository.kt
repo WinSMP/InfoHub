@@ -22,7 +22,7 @@ class SqliteHintPreferenceRepository(private val dataFolder: File) : HintPrefere
             val sql = """
                 CREATE TABLE IF NOT EXISTS $tableName (
                     player_uuid VARCHAR(36) PRIMARY KEY,
-                    preference VARCHAR(10) NOT NULL
+                    preference BOOLEAN DEFAULT NULL
                 )
             """
             stmt.execute(sql)
@@ -36,7 +36,12 @@ class SqliteHintPreferenceRepository(private val dataFolder: File) : HintPrefere
                 stmt.setString(1, playerUuid.toString())
                 stmt.executeQuery().use { rs ->
                     if (rs.next()) {
-                        TriState.valueOf(rs.getString("preference").uppercase())
+                        val preference = rs.getObject("preference") as? Boolean
+                        when (preference) {
+                            true -> TriState.TRUE
+                            false -> TriState.FALSE
+                            null -> TriState.NOT_SET
+                        }
                     } else {
                         TriState.NOT_SET
                     }
@@ -55,7 +60,11 @@ class SqliteHintPreferenceRepository(private val dataFolder: File) : HintPrefere
         """
             connection.prepareStatement(sql).use { stmt ->
                 stmt.setString(1, playerUuid.toString())
-                stmt.setString(2, choice.name.lowercase())
+                when (choice) {
+                    TriState.TRUE -> stmt.setBoolean(2, true)
+                    TriState.FALSE -> stmt.setBoolean(2, false)
+                    TriState.NOT_SET -> stmt.setNull(2, java.sql.Types.BOOLEAN)
+                }
                 stmt.executeUpdate()
             }
         }
