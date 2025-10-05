@@ -3,7 +3,7 @@ import java.util.*
 
 plugins {
     id("com.gradleup.shadow") version "8.3.6"
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.2.20"
 }
 
 group = "org.winlogon.infohub"
