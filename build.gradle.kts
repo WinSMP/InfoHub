@@ -66,7 +66,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
-    compileOnly("dev.jorel:commandapi-bukkit-core:10.0.1")
+    compileOnly("dev.jorel:commandapi-paper-core:11.0.0")
     compileOnly("com.github.oshi:oshi-core-java11:6.8.0")
 
     compileOnly("com.zaxxer:HikariCP:6.3.0")

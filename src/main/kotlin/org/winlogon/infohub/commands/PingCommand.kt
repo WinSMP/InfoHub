@@ -1,7 +1,7 @@
 package org.winlogon.infohub.commands
 
 import dev.jorel.commandapi.CommandAPICommand
-import dev.jorel.commandapi.arguments.PlayerArgument
+import dev.jorel.commandapi.arguments.EntitySelectorArgument
 import dev.jorel.commandapi.executors.CommandExecutor
 
 import org.bukkit.entity.Player
@@ -15,7 +15,7 @@ class PingCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("ping")
-            .withArguments(PlayerArgument("player").setOptional(true))
+            .withArguments(EntitySelectorArgument.OnePlayer("player").setOptional(true))
             .executes(CommandExecutor { sender, args ->
                 val target = (args["player"] as? Player) ?: sender as? Player
                 if (target == null) {
