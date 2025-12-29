@@ -20,6 +20,7 @@ class DiscordCommand(
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("discord")
             .withPermission(Permissions.DISCORD)
+            .withFullDescription("Shows the link to our Discord server.")
             .executes(CommandExecutor { sender, _ ->
                 val clickableDiscordInvite = Component.text(mainConfig.discordLink)
                     .color(NamedTextColor.DARK_AQUA)

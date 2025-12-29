@@ -14,6 +14,7 @@ class HelpCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("helpme")
+            .withFullDescription("Shows an help message, introducing the user to the server.")
             .withPermission(Permissions.HELP)
             .executes(CommandExecutor { sender, _ ->
                 playerLogger.normal(sender, mainConfig.helpMessage)

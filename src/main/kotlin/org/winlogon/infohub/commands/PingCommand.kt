@@ -16,6 +16,7 @@ class PingCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("ping")
+            .withFullDescription("Get a player's ping. If no player is specified, get your own ping.")
             .withPermission(Permissions.PING)
             .withArguments(EntitySelectorArgument.OnePlayer("player").setOptional(true))
             .executes(CommandExecutor { sender, args ->

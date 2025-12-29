@@ -13,6 +13,7 @@ class UptimeCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("uptime")
+            .withFullDescription("Get the uptime of the Minecraft server.")
             .executes(CommandExecutor { sender, _ ->
                 playerLogger.normal(sender, ServerStats.getUptime(startTime, System.nanoTime()))
             })

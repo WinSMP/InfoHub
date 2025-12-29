@@ -1,6 +1,7 @@
 package org.winlogon.infohub
 
 import org.bukkit.permissions.Permission
+import org.bukkit.permissions.PermissionDefault
 import org.bukkit.plugin.PluginManager
 
 object Permissions {
@@ -9,14 +10,12 @@ object Permissions {
     const val DISCORD = "infohub.discord"
     const val HELP = "infohub.help"
     const val HINT_TOGGLE = "infohub.hint.toggle"
-    const val HINT_TOGGLE_OTHERS = "infohub.hint.toggle.others"
 
     fun register(pluginManager: PluginManager) {
-        pluginManager.addPermission(Permission(PING, "Allows the user to use the /ping command"))
-        pluginManager.addPermission(Permission(RULES, "Allows the user to use the /rules command"))
-        pluginManager.addPermission(Permission(DISCORD, "Allows the user to use the /discord command"))
-        pluginManager.addPermission(Permission(HELP, "Allows the user to use the /help command"))
-        pluginManager.addPermission(Permission(HINT_TOGGLE, "Allows the user to toggle hints for themselves"))
-        pluginManager.addPermission(Permission(HINT_TOGGLE_OTHERS, "Allows the user to toggle hints for other players"))
+        pluginManager.addPermission(Permission(PING, "Allows the user to use the /ping command", PermissionDefault.NOT_OP))
+        pluginManager.addPermission(Permission(RULES, "Allows the user to use the /rules command", PermissionDefault.NOT_OP))
+        pluginManager.addPermission(Permission(DISCORD, "Allows the user to use the /discord command", PermissionDefault.NOT_OP))
+        pluginManager.addPermission(Permission(HELP, "Allows the user to use the /help command", PermissionDefault.NOT_OP))
+        pluginManager.addPermission(Permission(HINT_TOGGLE, "Allows the user to toggle hints for other players", PermissionDefault.OP))
     }
 }

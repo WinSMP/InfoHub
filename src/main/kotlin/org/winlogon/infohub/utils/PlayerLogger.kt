@@ -1,11 +1,12 @@
 package org.winlogon.infohub.utils
 
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.command.CommandSender
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
-import net.kyori.adventure.text.Component
+
+import org.bukkit.command.CommandSender
 
 public class PlayerLogger {
     private val prefix = "<dark_gray>[<level><dark_gray>]<gray> "

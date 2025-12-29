@@ -15,6 +15,7 @@ class RulesCommand(
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("rules")
             .withPermission(Permissions.RULES)
+            .withFullDescription("Shows the server rules.")
             .withAliases("rulebook")
             .executes(CommandExecutor { sender, _ ->
                 if (mainConfig.rules.isEmpty()) {

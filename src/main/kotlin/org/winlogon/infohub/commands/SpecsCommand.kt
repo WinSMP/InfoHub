@@ -12,6 +12,7 @@ class SpecsCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("specs")
+            .withFullDescription("Get the hardware and software specs of the server, from OS to CPU.")
             .executes(CommandExecutor { sender, _ ->
                 val specs = ServerStats.getSystemSpecs()
                 playerLogger.normal(

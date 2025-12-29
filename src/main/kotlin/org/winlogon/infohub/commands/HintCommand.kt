@@ -20,7 +20,7 @@ class HintCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("hint")
-            .withPermission(Permissions.HINT_TOGGLE)
+            .withFullDescription("Enable or disable hints about the server.")
             .withSubcommands(
                 CommandAPICommand("disable")
                     .executesPlayer(PlayerCommandExecutor { sender, _ ->
@@ -36,6 +36,7 @@ class HintCommand(
                     }),
                 CommandAPICommand("toggle")
                     .withArguments(EntitySelectorArgument.OnePlayer("player"), BooleanArgument("enabled"))
+                    .withPermission(Permissions.HINT_TOGGLE)
                     .executes(CommandExecutor { sender, args ->
                         val player = args["player"] as Player
                         val enabled = args["enabled"] as Boolean

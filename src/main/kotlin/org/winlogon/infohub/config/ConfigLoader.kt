@@ -1,7 +1,7 @@
 package org.winlogon.infohub.config
 
 import org.bukkit.configuration.file.FileConfiguration
-import org.winlogon.infohub.util.tableRegex
+import org.winlogon.infohub.utils.tableRegex
 import java.time.Duration
 
 fun loadMainConfig(bukkitConfig: FileConfiguration): MainConfig {
