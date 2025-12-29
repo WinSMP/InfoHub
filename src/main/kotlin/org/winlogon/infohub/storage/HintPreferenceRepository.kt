@@ -26,8 +26,9 @@ interface HintPreferenceRepository {
      *
      * @param playerUuid The UUID of the player.
      * @param choice The player's preference.
+     * @return A [CompletableFuture] that will complete when the operation is finished.
      */
-    fun setHintPreference(playerUuid: UUID, choice: TriState)
+    fun setHintPreference(playerUuid: UUID, choice: TriState): CompletableFuture<Void>
 
     /**
      * Closes the repository and releases any resources.

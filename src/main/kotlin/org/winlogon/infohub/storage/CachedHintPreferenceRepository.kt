@@ -30,9 +30,9 @@ class CachedHintPreferenceRepository(
         }
     }
 
-    override fun setHintPreference(playerUuid: UUID, choice: TriState) {
+    override fun setHintPreference(playerUuid: UUID, choice: TriState): CompletableFuture<Void> {
         cache.put(playerUuid, choice)
-        persistentRepository.setHintPreference(playerUuid, choice)
+        return persistentRepository.setHintPreference(playerUuid, choice)
     }
 
     override fun close() {

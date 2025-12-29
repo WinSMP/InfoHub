@@ -28,17 +28,11 @@ class InfoHubLoader : PluginLoader {
             "org.winlogon:asynccraftr" to "0.1.0",
         )
 
-        repositories.forEach { (name, url) -> 
-            resolver.addRepository(
-                RemoteRepository.Builder(
-                    name, 
-                    "default", 
-                    url
-                ).build()
-            )
+        repositories.forEach { (name, url) ->
+            resolver.addRepository(RemoteRepository.Builder(name, "default", url).build())
         }
 
-        dependencies.forEach { (dependencyPackage, version) -> 
+        dependencies.forEach { (dependencyPackage, version) ->
             resolver.addDependency(
                 Dependency(
                     DefaultArtifact("$dependencyPackage:$version"),

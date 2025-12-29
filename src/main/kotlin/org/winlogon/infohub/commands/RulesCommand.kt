@@ -4,6 +4,7 @@ import dev.jorel.commandapi.CommandAPICommand
 import dev.jorel.commandapi.executors.CommandExecutor
 
 import org.bukkit.plugin.java.JavaPlugin
+import org.winlogon.infohub.Permissions
 import org.winlogon.infohub.config.MainConfig
 import org.winlogon.infohub.utils.PlayerLogger
 
@@ -13,6 +14,7 @@ class RulesCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("rules")
+            .withPermission(Permissions.RULES)
             .withAliases("rulebook")
             .executes(CommandExecutor { sender, _ ->
                 if (mainConfig.rules.isEmpty()) {

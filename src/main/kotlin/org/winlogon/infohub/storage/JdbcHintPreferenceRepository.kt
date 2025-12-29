@@ -9,27 +9,25 @@ import org.winlogon.infohub.config.DatabaseType
 
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * A [HintPreferenceRepository] that uses a database to store player hint preferences.
  */
 class JdbcHintPreferenceRepository(private val config: DatabaseConfig) : HintPreferenceRepository {
     private lateinit var dataSource: HikariDataSource
-    private val updateQueue = ConcurrentLinkedQueue<Pair<UUID, TriState>>()
 
     override fun init() {
         when (config.type) {
             DatabaseType.MYSQL -> Class.forName("com.mysql.cj.jdbc.Driver")
             DatabaseType.POSTGRESQL -> Class.forName("org.postgresql.Driver")
-            DatabaseType.SQLITE -> throw IllegalArgumentException("SQLite should be handled by SqliteHintPreferenceRepository")
+            DatabaseType.SQLITE -> throw IllegalArgumentException("SQLite should be handled by ${SqliteHintPreferenceRepository::class.simpleName}")
         }
 
         dataSource = HikariDataSource().apply {
             jdbcUrl = when (config.type) {
                 DatabaseType.MYSQL -> "jdbc:mysql://${config.host}:${config.port}/${config.database}"
                 DatabaseType.POSTGRESQL -> "jdbc:postgresql://${config.host}:${config.port}/${config.database}"
-                DatabaseType.SQLITE -> throw IllegalArgumentException("SQLite should be handled by SqliteHintPreferenceRepository")
+                DatabaseType.SQLITE -> throw IllegalArgumentException("SQLite should be handled by ${SqliteHintPreferenceRepository::class.simpleName}")
             }
             username = config.username
             password = config.password
@@ -74,15 +72,8 @@ class JdbcHintPreferenceRepository(private val config: DatabaseConfig) : HintPre
         }
     }
 
-    override fun setHintPreference(playerUuid: UUID, choice: TriState) {
-        updateQueue.add(playerUuid to choice)
-    }
-
-    fun processUpdateQueue(): CompletableFuture<Void> {
+    override fun setHintPreference(playerUuid: UUID, choice: TriState): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
-            val updates = generateSequence { updateQueue.poll() }.toList()
-            if (updates.isEmpty()) return@runAsync
-
             dataSource.connection.use { connection ->
                 val sql = when (config.type) {
                     DatabaseType.MYSQL -> """
@@ -96,16 +87,13 @@ class JdbcHintPreferenceRepository(private val config: DatabaseConfig) : HintPre
                     else -> return@use
                 }
                 connection.prepareStatement(sql).use { stmt ->
-                    for ((uuid, choice) in updates) {
-                        stmt.setString(1, uuid.toString())
-                        when (choice) {
-                            TriState.TRUE -> stmt.setBoolean(2, true)
-                            TriState.FALSE -> stmt.setBoolean(2, false)
-                            TriState.NOT_SET -> stmt.setNull(2, java.sql.Types.BOOLEAN)
-                        }
-                        stmt.addBatch()
+                    stmt.setString(1, playerUuid.toString())
+                    when (choice) {
+                        TriState.TRUE -> stmt.setBoolean(2, true)
+                        TriState.FALSE -> stmt.setBoolean(2, false)
+                        TriState.NOT_SET -> stmt.setNull(2, java.sql.Types.BOOLEAN)
                     }
-                    stmt.executeBatch()
+                    stmt.executeUpdate()
                 }
             }
         }
@@ -113,7 +101,6 @@ class JdbcHintPreferenceRepository(private val config: DatabaseConfig) : HintPre
 
     override fun close() {
         if (::dataSource.isInitialized) {
-            processUpdateQueue().join() // process remaining queue before closing
             dataSource.close()
         }
     }

@@ -50,8 +50,8 @@ class SqliteHintPreferenceRepository(private val dataFolder: File) : HintPrefere
         }
     }
 
-    override fun setHintPreference(playerUuid: UUID, choice: TriState) {
-        CompletableFuture.runAsync {
+    override fun setHintPreference(playerUuid: UUID, choice: TriState): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
             val sql = """
             INSERT INTO $tableName (player_uuid, preference)
             VALUES (?, ?)

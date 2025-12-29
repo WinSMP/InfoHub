@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 
 import org.bukkit.plugin.java.JavaPlugin
+import org.winlogon.infohub.Permissions
 import org.winlogon.infohub.config.MainConfig
 import org.winlogon.infohub.utils.PlayerLogger
 
@@ -18,6 +19,7 @@ class DiscordCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("discord")
+            .withPermission(Permissions.DISCORD)
             .executes(CommandExecutor { sender, _ ->
                 val clickableDiscordInvite = Component.text(mainConfig.discordLink)
                     .color(NamedTextColor.DARK_AQUA)

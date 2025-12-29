@@ -6,6 +6,7 @@ import dev.jorel.commandapi.executors.CommandExecutor
 
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import org.winlogon.infohub.Permissions
 import org.winlogon.infohub.config.MainConfig
 import org.winlogon.infohub.utils.PlayerLogger
 
@@ -15,6 +16,7 @@ class PingCommand(
 ) : PluginCommand {
     override fun register(plugin: JavaPlugin) {
         CommandAPICommand("ping")
+            .withPermission(Permissions.PING)
             .withArguments(EntitySelectorArgument.OnePlayer("player").setOptional(true))
             .executes(CommandExecutor { sender, args ->
                 val target = (args["player"] as? Player) ?: sender as? Player

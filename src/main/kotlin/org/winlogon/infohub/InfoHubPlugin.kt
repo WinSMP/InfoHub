@@ -1,31 +1,21 @@
 package org.winlogon.infohub
 
-import dev.jorel.commandapi.CommandAPI
-import dev.jorel.commandapi.CommandAPICommand
-import dev.jorel.commandapi.CommandAPIConfig
-import dev.jorel.commandapi.arguments.EntitySelectorArgument
-import dev.jorel.commandapi.executors.CommandExecutor
-import dev.jorel.commandapi.executors.PlayerCommandExecutor
-
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.util.TriState
 
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
-
 import org.winlogon.asynccraftr.AsyncCraftr
 import org.winlogon.infohub.cache.*
 import org.winlogon.infohub.commands.*
 import org.winlogon.infohub.config.*
 import org.winlogon.infohub.storage.*
-import org.winlogon.infohub.utils.*
+import org.winlogon.infohub.utils.HintHandler
+import org.winlogon.infohub.utils.PlayerLogger
+import org.winlogon.infohub.utils.ServerStats
 
 import java.time.Duration
-import java.util.*
-
+import java.util.UUID
 import kotlin.random.Random
 
 class InfoHubPlugin : JavaPlugin() {
@@ -37,17 +27,15 @@ class InfoHubPlugin : JavaPlugin() {
     private val playerLogger = PlayerLogger()
     private val emojiList = listOf("💡", "📝", "🔍", "📌", "💬", "📖", "🎯")
     private val random = Random.Default
-    private val tableRegex = Regex("[a-zA-Z0-9_]+")
     private var startTime: Long = 0
 
     override fun onLoad() {
         startTime = System.nanoTime()
-        // CommandAPI.onLoad(CommandAPIConfig())
+        Permissions.register(server.pluginManager)
     }
 
     override fun onEnable() {
-        // CommandAPI.onEnable()
-        mainConfig = loadConfig()
+        loadConfiguration()
         hintHandler = HintHandler(
             miniMessage,
             HintConfig(mainConfig.hintList, emojiList),
@@ -60,7 +48,6 @@ class InfoHubPlugin : JavaPlugin() {
 
     override fun onDisable() {
         preferenceRepository.close()
-        // CommandAPI.onDisable()
     }
 
     private fun setupStorage() {
@@ -79,65 +66,41 @@ class InfoHubPlugin : JavaPlugin() {
         }
 
         preferenceRepository = CachedHintPreferenceRepository(persistentRepository, cache)
-
-        storageConfig.backupInterval?.let { interval ->
-            if (persistentRepository is JdbcHintPreferenceRepository) {
-                AsyncCraftr.runAsyncTaskTimer(this, { persistentRepository.processUpdateQueue() }, interval, interval)
-            }
-        }
     }
 
     private fun startSendingHints() {
         val minutes = random.nextInt(10, 25).toLong()
         AsyncCraftr.runAsyncTaskLater(this, {
-            val onlinePlayers = server.onlinePlayers
-            val playersToHint = onlinePlayers.filter { player ->
-                preferenceRepository.getHintPreference(player.uniqueId).get() != TriState.FALSE
+            // Grab a snapshot of online players
+            val onlinePlayers = server.onlinePlayers.toList()
+            if (onlinePlayers.isEmpty()) {
+                startSendingHints()
+                return@runAsyncTaskLater
             }
-            if (playersToHint.isNotEmpty()) {
-                hintHandler.sendRandomHint(playersToHint, emptyList())
+
+            // Pick a random player
+            val randomPlayer = onlinePlayers[random.nextInt(onlinePlayers.size)]
+
+            // Run a synchronous task on the region's main thread
+            AsyncCraftr.runRegionTask(this, randomPlayer.location) {
+                val playersInRegion = randomPlayer.world.getNearbyPlayers(randomPlayer.location, 100.0)
+                playersInRegion.forEach { player ->
+                    preferenceRepository.getHintPreference(player.uniqueId).thenAccept { triState ->
+                        if (triState != TriState.FALSE) {
+                            hintHandler.sendRandomHint(player, emptyList())
+                        }
+                    }
+                }
             }
+
+            // Continue with the regular flow
             startSendingHints()
         }, Duration.ofMinutes(minutes))
     }
 
-    private fun loadConfig(): MainConfig {
+    private fun loadConfiguration() {
         saveDefaultConfig()
-        val bukkitConfig = config
-
-        val storageSection = bukkitConfig.getConfigurationSection("storage")!!
-        val databaseSection = storageSection.getConfigurationSection("database")!!
-        val redisSection = storageSection.getConfigurationSection("redis")!!
-
-        val databaseConfig = DatabaseConfig(
-            type = DatabaseType.valueOf(databaseSection.getString("type", "SQLITE")!!.uppercase()),
-            host = databaseSection.getString("host", "localhost")!!,
-            port = databaseSection.getInt("port", 3306),
-            database = databaseSection.getString("database", "minecraft")!!,
-            username = databaseSection.getString("username", "root")!!,
-            password = databaseSection.getString("password", "")!!,
-            table = databaseSection.getString("table", "hint_preferences")!!.takeIf { it.matches(tableRegex) } ?: "hint_preferences"
-        )
-
-        val redisConfig = RedisConfig(
-            enabled = redisSection.getBoolean("enabled", false),
-            uri = redisSection.getString("uri", "redis://localhost:6379")!!
-        )
-
-        val storageConfig = StorageConfig(
-            database = databaseConfig,
-            redis = redisConfig,
-            backupInterval = storageSection.getString("backupInterval")?.let { Duration.parse("PT${it.uppercase()}") }
-        )
-
-        return MainConfig(
-            discordLink = bukkitConfig.getString("discord-link", "https://discord.gg/yourserver")!!,
-            rules = bukkitConfig.getStringList("rules"),
-            helpMessage = bukkitConfig.getString("help-message", "Use /discord, /rules, or /help for more information!")!!,
-            warnUserAboutPing = bukkitConfig.getBoolean("warn-user-ping", false),
-            hintList = bukkitConfig.getStringList("hint-list"),
-            storage = storageConfig
-        )
+        mainConfig = loadMainConfig(config)
     }
 
     private fun registerCommands() {
