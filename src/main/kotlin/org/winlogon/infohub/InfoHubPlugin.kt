@@ -70,30 +70,42 @@ class InfoHubPlugin : JavaPlugin() {
 
     private fun startSendingHints() {
         val minutes = random.nextInt(10, 25).toLong()
+
         AsyncCraftr.runAsyncTaskLater(this, {
-            // Grab a snapshot of online players
+            // Snapshot online players to avoid concurrent modification
             val onlinePlayers = server.onlinePlayers.toList()
+
+            // No players online means there is no region thread we can safely anchor to.
+            // Reschedule instead of attempting delivery so hints only fire when players exist.
             if (onlinePlayers.isEmpty()) {
                 startSendingHints()
                 return@runAsyncTaskLater
             }
 
-            // Pick a random player
+            // Pick a random player to act as a region anchor
             val randomPlayer = onlinePlayers[random.nextInt(onlinePlayers.size)]
 
-            // Run a synchronous task on the region's main thread
+            // Switch to the owning region thread for spatial/player interaction
             AsyncCraftr.runRegionTask(this, randomPlayer.location) {
-                val playersInRegion = randomPlayer.world.getNearbyPlayers(randomPlayer.location, 100.0)
+                val playersInRegion =
+                    randomPlayer.world.getNearbyPlayers(randomPlayer.location, 100.0)
+
                 playersInRegion.forEach { player ->
-                    preferenceRepository.getHintPreference(player.uniqueId).thenAccept { triState ->
-                        if (triState != TriState.FALSE) {
-                            hintHandler.sendRandomHint(player, emptyList())
+                    // Preference lookup can be async and off-region
+                    preferenceRepository
+                        .getHintPreference(player.uniqueId)
+                        .thenAccept { triState ->
+                            if (triState != TriState.FALSE) {
+                                // Re-enter the owning region thread before touching the player
+                                AsyncCraftr.runRegionTask(this, player.location) {
+                                    hintHandler.sendRandomHint(player, emptyList())
+                                }
+                            }
                         }
-                    }
                 }
             }
 
-            // Continue with the regular flow
+            // Schedule the next hint cycle
             startSendingHints()
         }, Duration.ofMinutes(minutes))
     }
