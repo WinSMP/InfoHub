@@ -117,9 +117,13 @@ class InfoHubPlugin : JavaPlugin() {
 
     private fun registerCommands() {
         val commands = arrayOf(
-            PingCommand(mainConfig, playerLogger), RulesCommand(mainConfig, playerLogger),
-            DiscordCommand(mainConfig, playerLogger), HelpCommand(mainConfig, playerLogger),
-            HintCommand(preferenceRepository, playerLogger)
+            DiscordCommand(mainConfig, playerLogger),
+            HelpCommand(mainConfig, playerLogger),
+            HintCommand(preferenceRepository, playerLogger),
+            PingCommand(mainConfig, playerLogger),
+            RulesCommand(mainConfig, playerLogger),
+            SpecsCommand(playerLogger),
+            UptimeCommand(playerLogger, startTime),
         )
 
         for (command in commands) {
