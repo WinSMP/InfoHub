@@ -2,6 +2,8 @@ package org.winlogon.infohub.config
 
 import org.bukkit.configuration.file.FileConfiguration
 import org.winlogon.infohub.utils.tableRegex
+import org.bukkit.configuration.ConfigurationSection
+
 import java.time.Duration
 
 fun loadMainConfig(bukkitConfig: FileConfiguration): MainConfig {
@@ -27,7 +29,7 @@ private fun loadStorageConfig(bukkitConfig: FileConfiguration): StorageConfig {
     )
 }
 
-private fun loadDatabaseConfig(storageSection: org.bukkit.configuration.ConfigurationSection): DatabaseConfig {
+private fun loadDatabaseConfig(storageSection: ConfigurationSection): DatabaseConfig {
     val databaseSection = storageSection.getConfigurationSection("database")!!
     return DatabaseConfig(
         type = DatabaseType.valueOf(databaseSection.getString("type", "SQLITE")!!.uppercase()),
@@ -40,7 +42,7 @@ private fun loadDatabaseConfig(storageSection: org.bukkit.configuration.Configur
     )
 }
 
-private fun loadRedisConfig(storageSection: org.bukkit.configuration.ConfigurationSection): RedisConfig {
+private fun loadRedisConfig(storageSection: ConfigurationSection): RedisConfig {
     val redisSection = storageSection.getConfigurationSection("redis")!!
     return RedisConfig(
         enabled = redisSection.getBoolean("enabled", false),
