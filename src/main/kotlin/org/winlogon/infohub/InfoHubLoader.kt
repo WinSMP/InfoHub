@@ -18,14 +18,14 @@ class InfoHubLoader : PluginLoader {
         )
 
         val dependencies = mapOf(
-            "com.github.oshi:oshi-core-java11" to "6.8.0",
+            "com.github.oshi:oshi-core" to "7.6.1",
 
-            "com.zaxxer:HikariCP" to "6.3.0",
-            "org.postgresql:postgresql" to "42.7.7",
-            "com.mysql:mysql-connector-j" to "9.3.0",
-            "io.lettuce:lettuce-core" to "6.7.1.RELEASE",
+            "com.zaxxer:HikariCP" to "7.1.0",
+            "org.postgresql:postgresql" to "42.7.13",
+            "com.mysql:mysql-connector-j" to "26.7.0",
+            "io.lettuce:lettuce-core" to "7.8.0.RELEASE",
 
-            "org.winlogon:asynccraftr" to "0.1.0",
+            "org.winlogon:asynccraftr" to "0.2.0",
         )
 
         repositories.forEach { (name, url) ->

@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("com.gradleup.shadow") version "9.1.0"
+    id("com.gradleup.shadow") version "9.6.1"
     kotlin("jvm") version "2.3.20"
 }
 
@@ -64,23 +64,23 @@ repositories {
     mavenCentral()
 }
 
-val minecraftVersion = "1.21.11"
+val minecraftVersion = "26.1.2"
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:${minecraftVersion}-R0.1-SNAPSHOT")
-    compileOnly("dev.jorel:commandapi-paper-core:11.1.0")
-    compileOnly("com.github.oshi:oshi-core-java11:6.8.0")
+    compileOnly("io.papermc.paper:paper-api:${minecraftVersion}.build.+")
+    compileOnly("dev.jorel:commandapi-paper-core:12.0.0")
+    compileOnly("com.github.oshi:oshi-core:7.6.1")
 
-    compileOnly("com.zaxxer:HikariCP:6.3.0")
-    compileOnly("org.postgresql:postgresql:42.7.7")
-    compileOnly("com.mysql:mysql-connector-j:9.3.0")
-    compileOnly("io.lettuce:lettuce-core:6.7.1.RELEASE")
+    compileOnly("com.zaxxer:HikariCP:7.1.0")
+    compileOnly("org.postgresql:postgresql:42.7.13")
+    compileOnly("com.mysql:mysql-connector-j:26.7.0")
+    compileOnly("io.lettuce:lettuce-core:7.8.0.RELEASE")
 
-    compileOnly("org.winlogon:asynccraftr:0.1.0")
+    compileOnly("org.winlogon:asynccraftr:0.2.0")
     
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
-    testImplementation("io.papermc.paper:paper-api:${minecraftVersion}-R0.1-SNAPSHOT")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")
+    testImplementation("io.papermc.paper:paper-api:${minecraftVersion}.build.+")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
 }
 
 tasks.test {
