@@ -8,6 +8,7 @@ class Color(val r: Int, val g: Int, val b: Int, private val random: Random) {
     }
 
     fun toHSL(): Triple<Int, Int, Int> {
+        // Normalize the colors
         val rNorm = r / 255.0
         val gNorm = g / 255.0
         val bNorm = b / 255.0

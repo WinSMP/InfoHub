@@ -3,8 +3,8 @@ package org.winlogon.infohub
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.util.TriState
 
-import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+
 import org.winlogon.asynccraftr.AsyncCraftr
 import org.winlogon.infohub.cache.*
 import org.winlogon.infohub.commands.*
@@ -12,10 +12,8 @@ import org.winlogon.infohub.config.*
 import org.winlogon.infohub.storage.*
 import org.winlogon.infohub.utils.HintHandler
 import org.winlogon.infohub.utils.PlayerLogger
-import org.winlogon.infohub.utils.ServerStats
 
 import java.time.Duration
-import java.util.UUID
 import kotlin.random.Random
 
 class InfoHubPlugin : JavaPlugin() {
@@ -69,7 +67,7 @@ class InfoHubPlugin : JavaPlugin() {
     }
 
     private fun startSendingHints() {
-        val minutes = random.nextInt(10, 25).toLong()
+        val minutes = random.nextLong(10, 25)
 
         AsyncCraftr.runAsyncTaskLater(this, {
             // Snapshot online players to avoid concurrent modification

@@ -2,8 +2,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("com.gradleup.shadow") version "8.3.6"
-    kotlin("jvm") version "2.2.20"
+    id("com.gradleup.shadow") version "9.1.0"
+    kotlin("jvm") version "2.3.20"
 }
 
 group = "org.winlogon.infohub"
