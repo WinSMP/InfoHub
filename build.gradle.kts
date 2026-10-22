@@ -68,7 +68,7 @@ val minecraftVersion = "26.1.2"
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:${minecraftVersion}.build.+")
-    compileOnly("dev.jorel:commandapi-paper-core:12.0.0")
+    compileOnly("dev.jorel:commandapi-paper-core:12.1.0")
     compileOnly("com.github.oshi:oshi-core:7.6.1")
 
     compileOnly("com.zaxxer:HikariCP:7.1.0")
